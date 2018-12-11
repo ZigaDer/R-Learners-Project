@@ -36,3 +36,5 @@ plotmeans(len ~ dose, data = ToothGrowth, frame = FALSE)
 plotmeans(len ~ dose, data = ToothGrowth, frame = FALSE,
           mean.labels = TRUE, connect = FALSE)
 
+to <- c(1,2,3)
+
