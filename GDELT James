@@ -1,0 +1,31 @@
+library(readr)
+library(dplyr)
+
+#Import data from downloads folder
+GDELT <- read.csv("C:\\Users\\redmoj\\Downloads\\GDELT_gkg_f8_package1.csv")
+
+#Structure of GDELT
+str(GDELT)
+
+#Count number of Rows & Columns
+nrow(GDELT)
+ncol(GDELT)
+
+#Column Names
+colnames(GDELT)
+
+#First & last entry from document source 
+GDELT$documentSource[1]
+GDELT$documentSource[length(GDELT$documentSource)]
+
+
+#Count number of soruces from The Mirror
+length(grep("mirror.co.uk", GDELT$documentSource))
+
+#Count from Date
+library(lubridate)
+# dates <- as.date(GDELT$dateTimeDocument, '%d/%m/%Y')
+# counts <- data.frame(table(as.Date(index(GDELT$dateTimeDocument))))
+
+#Work around - Counts data from February 2015: 
+length(grep("2015-02", GDELT$dateTimeDocument))
