@@ -4,12 +4,17 @@ library(dplyr)
 #Import data from downloads folder
 GDELT <- read.csv("C:\\Users\\redmoj\\Downloads\\GDELT_gkg_f8_package1.csv")
 
-#Structure of GDELT
+#Structure and Info of GDELT
 str(GDELT)
+glimpse(GDELT)
+class(GDELT)
+summary(GDELT)
 
 #Count number of Rows & Columns
 nrow(GDELT)
 ncol(GDELT)
+#Alternativley
+dim(GDELT) 
 
 #Column Names
 colnames(GDELT)
@@ -29,3 +34,6 @@ library(lubridate)
 
 #Work around - Counts data from February 2015: 
 length(grep("2015-02", GDELT$dateTimeDocument))
+
+#Count number of sources from London 
+length(grep("London", GDELT$locationsCharLoc))
