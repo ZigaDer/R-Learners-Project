@@ -1,0 +1,31 @@
+#Import data
+GDELT <- read.csv("C:\\Users\\sandhr\\Downloads\\GDELT_gkg_f8_package1.csv")
+
+#number of rows and columns
+ncol(GDELT)
+nrow(GDELT)
+
+#column names
+colnames(GDELT)
+
+#content of columns
+str(GDELT)
+
+#range of the date variable
+GDELT$dateTimeDocument <- sort(GDELT$dateTimeDocument)
+  #earliest entry
+  entryfirst <- GDELT[1,]  
+  #last entry
+  entrylast <- GDELT[nrow(GDELT),]
+  
+#transform format of dateTimeDocument column
+dates <- substr(GDELT$dateTimeDocument, 1, 10)
+times <- substr(GDELT$dateTimeDocument, 12, 19)
+GDELT$dateTime <- paste(dates, times)
+GDELT$dateTime <- strptime(GDELT$dateTime,format='%Y-%m-%d %H:%M:%S')
+
+#how many articles in each month (There's probably a better way of doing this)
+months <- substr(GDELT$dateTimeDocument, 1, 7)
+monthsdf <- as.data.frame(months)
+library(dplyr)
+a <- count(monthsdf, months)
