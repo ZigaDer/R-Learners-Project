@@ -1,0 +1,37 @@
+library(readr)
+library(dplyr)
+library(plyr)
+
+#I downloaded just the first csv file, that's what I'll be working with 
+#for the time being. Let's import it:
+GDELT_gkg_f8_package1 <- read_csv("D:/R/Lib/GDELT_gkg_f8_package1.csv")
+
+#Of course I picked a silly name so I now have to rename this dataframe to something prettier
+GDELT1 <- GDELT_gkg_f8_package1
+#Apparently a name is not a thing that exists (#deep?), so the best way is just to assign
+#the dataframe to a new variable(name). There is no way to "rename" a dataframe. 
+
+#removing its uglier twin:
+rm(GDELT_gkg_f8_package3)
+
+#let's count the columns
+ncol(GDELT1)
+#and now the rows
+nrow(GDELT1)
+#463324, that's a lot of rows
+
+#what are the names of individual columns, you ask?
+colnames(GDELT1)
+#"idGKG"                   "dateTimeDocument"        "documentSource"         
+#"themes"                  "themesCharLoc"           "locationsCharLoc"       
+#"tone"                    "mentionedNumericsCounts"
+
+#What's stored inside the columns. 
+str(GDELT1)
+summary(GDELT1)
+
+#finding the earliest entry
+GDELT1[which.min(GDELT1$dateTimeDocument),]
+#taking that away from the last entry:
+GDELT1$dateTimeDocument[which.max(GDELT1$dateTimeDocument)] - GDELT1$dateTimeDocument[which.min(GDELT1$dateTimeDocument)]
+#gives a time difference of 44.98958 days. 
