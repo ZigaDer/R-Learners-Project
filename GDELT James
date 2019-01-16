@@ -29,8 +29,11 @@ length(grep("mirror.co.uk", GDELT$documentSource))
 
 #Count from Date
 library(lubridate)
-# dates <- as.date(GDELT$dateTimeDocument, '%d/%m/%Y')
-# counts <- data.frame(table(as.Date(index(GDELT$dateTimeDocument))))
+#Create POSIXct
+dates <- substr(GDELT$dateTimeDocument, 1, 10) 
+times <- substr(GDELT$dateTimeDocument, 12, 19) 
+GDELT$dateTime <- paste(dates, times) 
+dateTimeEdit <- strptime(GDELT$dateTime, "%Y-%m-%d %H:%M:%S", tz = "GMT")
 
 #Work around - Counts data from February 2015: 
 length(grep("2015-02", GDELT$dateTimeDocument))
