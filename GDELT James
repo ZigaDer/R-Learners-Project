@@ -57,3 +57,12 @@ numberofposts <- c(investors, mirror, newyorker, salon, reuters, dailymail, bloo
 df <- data.frame(websites, numberofposts)
 
 ggplot(df, aes(x = websites, y = numberofposts)) +geom_bar(stat = "identity") 
+
+##Convert tone to numeric 
+GDELT$tone1 <- gsub("^(.*?),.*","\\1", GDELT$tone)
+GDELT$tone2 <- as.numeric(GDELT$tone1)
+class(GDELT$tone2) 
+
+#Extract tone for specific sources
+dplyr::filter(GDELT, !grepl("BBC", documentSource)) 
+bbc <- subset(GDELT, grepl(pattern = "/BBC ", x = GDELT$documentSource)) 
