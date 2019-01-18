@@ -41,3 +41,19 @@ dateTimeEdit <- strptime(GDELT$dateTime, "%Y-%m-%d %H:%M:%S", tz = "GMT")
 
 #Count number of sources from London 
 length(grep("London", GDELT$locationsCharLoc))
+
+#Built Data Frame for Bar Chart of document sources
+investors <- length(grep("investors.com", GDELT$documentSource))
+salon <- length(grep("salon.com", GDELT$documentSource))
+mirror <- length(grep("mirror.co.uk", GDELT$documentSource))
+newyorker <- length(grep("newyorker.com", GDELT$documentSource))
+reuters <- length(grep("reuters.com", GDELT$documentSource))
+dailymail <- length(grep("dailymail.co.uk", GDELT$documentSource))
+bloomberg <- length(grep("bloomberg.com", GDELT$documentSource))
+thetimes <- length(grep("thetimes.co.uk", GDELT$documentSource))
+
+websites <- c("Investors", "Mirror", "NewYorker", "Salon", "Reuters", "Dailymail", "Bloomberg", "TheTimes")
+numberofposts <- c(investors, mirror, newyorker, salon, reuters, dailymail, bloomberg, thetimes)
+df <- data.frame(websites, numberofposts)
+
+ggplot(df, aes(x = websites, y = numberofposts)) +geom_bar(stat = "identity") 
