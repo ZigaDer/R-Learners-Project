@@ -29,3 +29,51 @@ months <- substr(GDELT$dateTimeDocument, 1, 7)
 monthsdf <- as.data.frame(months)
 library(dplyr)
 a <- count(monthsdf, months)
+
+
+
+#getting the first value out of tone to see the positivity or negativity of the article
+class(GDELT$tone)
+#GDELT$tone_num <- as.numeric(GDELT$tone)
+
+
+#GDELT$average <- substr(GDELT$tone, 1, 4)
+#GDELT$average_num <- as.numeric(GDELT$tone)
+#class(GDELT$average_num)
+#GDELT$average_num[is.na(GDELT$average_num)] <- 0
+#class(GDELT$average_num)
+#GDELT$average_num <- sort(GDELT$average_num)
+#GDELT <- GDELT[order(average_num)]
+
+GDELT1 <- GDELT
+#GDELT$new <- is.na(GDELT$average_num)
+#GDELT$tone1 <- subset(GDELT, is.na(GDELT$average_num))
+
+GDELT1$tone1 <- gsub("^(.*?),.*","\\1", GDELT1$tone)
+GDELT1$tone1 <- as.numeric(GDELT1$tone1)
+#class(GDELT1$tone1)
+
+#getting the website name out of the url
+bbc <- subset(GDELT1, grepl(pattern = "/BBC ", x = GDELT1$documentSource))
+yahoo <- subset(GDELT1, grepl(pattern = ".yahoo.", x = GDELT1$documentSource))
+GDELT2 <- GDELT1[!grepl("/BBC ", GDELT1$documentSource),]
+GDELT2 <- GDELT2[!grepl(".yahoo.", GDELT2$documentSource),]
+
+GDELT2$Source <- sub(".*http://", "", GDELT2$documentSource)
+GDELT2$Source <- sub(".*https://", "", GDELT2$Source)
+GDELT2$Source <- sub(".*www2.", "", GDELT2$Source)
+GDELT2$Source <- sub(".*www5.", "", GDELT2$Source)
+GDELT2$Source <- sub(".*www3.", "", GDELT2$Source)
+GDELT2$Source <- sub(".*www10.", "", GDELT2$Source)
+GDELT2$Source <- sub(".*www.", "", GDELT2$Source)
+GDELT2$Source <- sub('\\..*', '', GDELT2$Source)
+
+GDELT$Source <- as.factor(GDELT$Source)
+articlecount <- GDELT2[c("Source", "tone1")]
+
+articlecount <- articlecount[order(articlecount$Source),]
+
+narticles <- count(articlecount, Source)
+narticles <- narticles[order(narticles$n, decreasing=TRUE),]
+
+#this doesn't include yahoo and bbc. the figures for these need to be added in 
