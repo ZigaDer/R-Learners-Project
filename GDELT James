@@ -66,3 +66,7 @@ class(GDELT$tone2)
 #Extract tone for specific sources
 dplyr::filter(GDELT, !grepl("BBC", documentSource)) 
 bbc <- subset(GDELT, grepl(pattern = "/BBC ", x = GDELT$documentSource)) 
+bbcterrorism <- subset(bbc, grepl(pattern = "TERROR", x = bbc$themes))
+bbcfinance <- subset(bbc, grepl(pattern = "finance", x = bbc$themes))
+ggplot() + geom_point(data=bbcterrorism, aes(x = dateTime, y = tone2), col = 'red') + geom_point(data=bbcfinance, aes(x = dateTime, y = tone2), col = 'green')
+
