@@ -59,21 +59,64 @@ yahoo <- subset(GDELT1, grepl(pattern = ".yahoo.", x = GDELT1$documentSource))
 GDELT2 <- GDELT1[!grepl("/BBC ", GDELT1$documentSource),]
 GDELT2 <- GDELT2[!grepl(".yahoo.", GDELT2$documentSource),]
 
-GDELT2$Source <- sub(".*http://", "", GDELT2$documentSource)
-GDELT2$Source <- sub(".*https://", "", GDELT2$Source)
-GDELT2$Source <- sub(".*www2.", "", GDELT2$Source)
-GDELT2$Source <- sub(".*www5.", "", GDELT2$Source)
-GDELT2$Source <- sub(".*www3.", "", GDELT2$Source)
-GDELT2$Source <- sub(".*www10.", "", GDELT2$Source)
-GDELT2$Source <- sub(".*www.", "", GDELT2$Source)
-GDELT2$Source <- sub('\\..*', '', GDELT2$Source)
+#remove the parts of the URL we won't need (as accurately as possible)
+GDELT$Source <- sub(".*https://news.", "", GDELT$documentSource)
+GDELT$Source <- sub(".*http://news.", "", GDELT$Source)
+GDELT$Source <- sub(".*http://", "", GDELT$Source)
+GDELT$Source <- sub(".*https://", "", GDELT$Source)
+GDELT$Source <- sub(".*www2.", "", GDELT$Source)
+GDELT$Source <- sub(".*www5.", "", GDELT$Source)
+GDELT$Source <- sub(".*www3.", "", GDELT$Source)
+GDELT$Source <- sub(".*www10.", "", GDELT$Source)
+GDELT$Source <- sub(".*www.", "", GDELT$Source)
+GDELT$Source <- sub('\\..*', '', GDELT$Source)
 
+#only interested in the Source and the tone of the articles
 GDELT$Source <- as.factor(GDELT$Source)
-articlecount <- GDELT2[c("Source", "tone1")]
-
+articlecount <- GDELT[c("Source", "tone1")]
 articlecount <- articlecount[order(articlecount$Source),]
 
+  #add the tones for yahoo and bbc back in 
+  yahoo$Source <- "yahoo"
+  yahoo <- yahoo[c("Source", "tone1")]
+  bbc$Source <- "bbc"
+  bbc <- bbc[c("Source", "tone1")]
+  articlecount <- rbind(articlecount, bbc, yahoo)
+
+#count the number of articles for each Source
+library(dplyr)
 narticles <- count(articlecount, Source)
 narticles <- narticles[order(narticles$n, decreasing=TRUE),]
+top20 <- narticles[1:20,] #The top 20 websites that produce the most articles
 
-#this doesn't include yahoo and bbc. the figures for these need to be added in 
+#Get the average tone of each of these 20 websites
+avgtone20 <- as.data.frame(matrix(nrow=20, ncol=3))
+names(avgtone20) <- c("Source", "meantone", "sd")
+avgtone20[,1] <- top20$Source
+for (i in 1:20) {
+  a <- subset(articlecount, grepl(pattern = paste0("^",top20$Source[i],"$"), x = articlecount$Source))
+  avgtone20[i,2] <- mean(a$tone1)
+  avgtone20[i,3] <- sd(a$tone1)
+  }
+
+#Take only the top 20 websites from articlecount so the tones can be plotted
+tones20 <- data.frame()
+for (i in 1:20) {
+  a <- subset(articlecount, grepl(pattern = paste0("^",top20$Source[i],"$"), x = articlecount$Source))
+  tones20 <- rbind(tones20, a)
+}
+
+#plot the data for the top 20 websites
+library(ggplot2)
+ggplot(avgtone20, aes(x = Source, y = meantone)) + geom_bar(stat = "identity") 
+
+ggplot() + geom_point(data = tones20, aes(Source, tone1), colour = 'red', size = 3)
+
+ggplot() + 
+geom_point(data = avgtone20, aes(Source, meantone)) +
+geom_errorbar(
+  data = avgtone20,
+  aes(Source, meantone, ymin = meantone - sd, ymax = meantone + sd),
+  colour = 'red',
+  width = 0.4
+)
