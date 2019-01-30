@@ -120,3 +120,74 @@ geom_errorbar(
   colour = 'red',
   width = 0.4
 )
+
+
+
+#Import data with a loop
+GDELT <- data.frame()
+for ( i in 1:7) {
+  file <- read.csv(paste0("C:\\Users\\sandhr\\Downloads\\GDELT_gkg_f8_package",i ,".csv"))
+  GDELT <- rbind(GDELT, file)
+}
+
+GDELT1 <- GDELT
+GDELT <- GDELT1[1:1000,]
+
+
+#CONTEXT
+## how often are urls meaningful?
+
+  #noticed that the meaningful part of the url usually contains a - or a _ so will remove any rows that dont contain this
+meaningful <- GDELT[grepl("-", GDELT$documentSource) | grepl("_", GDELT$documentSource),]
+  #from the dataset that had 463,324 rows, there are 381,293 meaningful urls
+
+  #alternative way of doing the same thing
+meaningful <- GDELT %>% filter(str_detect(documentSource, "_|-"))
+
+##how many websites lead to errors?
+
+##how often are there duplicate articles?
+
+  #posted by the same news outlet several times
+
+match <- function(GDELT){
+  match  <- as.data.frame(matrix(ncol=2, nrow=nrow(GDELT)))
+  names(match) <- c("url", "n")
+    for (i in 1:nrow(GDELT)){
+      url <- substr(GDELT$documentSource[i], 1, nchar(as.character(GDELT$documentSource[i])) - 2)
+      number <- sum(grepl(url, GDELT$documentSource))
+      match[i,1] <- url
+      match[i,2] <- number
+    }
+  match1 <- unique(subset(match, match[,2] > 1))
+  return(match1)
+}
+
+matches <- match(GDELT)
+
+  #matches is a dataset that contains a column of the urls that are repeated and then a column showing how many times it is repeated
+
+  #similar urls posted by several news outlets 
+source_character <- as.character(GDELT$documentSource) 
+split <- strsplit(source_character, "/")
+split <- unlist(split)
+decide <- as.data.frame(split)
+decide <- as.data.frame(decide[grepl("-", decide$split) | grepl("_", decide$split),])
+names(decide) <- c("content")
+
+match1 <- function(decide){
+  match  <- as.data.frame(matrix(ncol=2, nrow=nrow(decide)))
+  names(match) <- c("content", "n")
+  for (i in 1:nrow(decide)){
+    content <- decide$content[i]
+    number <- sum(grepl(content, decide$content))
+    match[i,1] <- as.character(content)
+    match[i,2] <- number
+  }
+  match1 <- unique(subset(match, match[,2] > 1))
+  return(match1)
+}
+
+matches1 <- match1(decide)
+  #matches1 is not a very tidy dataset but does highlight the stories that were posted more than once. 
+  #it doesn't say by which news outlets though
