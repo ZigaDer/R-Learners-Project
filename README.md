@@ -21,7 +21,7 @@ First, the comments about the code we’ve done so far (as seen on Github):
 •	Learn to loop -> Loop files in (for loop). Lisa insists it’s a crucial skill to have available and will come in handy with a lot of the tasks we’ll deal with in the future. Furthermore, it should help us to import the 8 csv files easier and faster. It also leads to code efficiency.
 •	Dplyr fundamentals: filter, select, mutate, arrange
 •	Lubridate for dates:  a suggested easy solution:
-mutate(Date - lubridate::as_date(ymd_hms(dateTimeDocument))
+mutate(Date = lubridate::as_date(ymd_hms(dateTimeDocument))
 
 Below are the goals/issue we should work towards and maybe even solve:
 1.	Context
