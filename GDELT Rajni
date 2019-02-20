@@ -142,6 +142,8 @@ meaningful <- GDELT[grepl("-", GDELT$documentSource) | grepl("_", GDELT$document
   #from the dataset that had 463,324 rows, there are 381,293 meaningful urls
 
   #alternative way of doing the same thing
+library(dplyr, lib.loc="D:\\R\\Lib")
+library(stringr, lib.loc="D:\\R\\Lib")
 meaningful <- GDELT %>% filter(str_detect(documentSource, "_|-"))
 
 ##how many websites lead to errors?
@@ -154,7 +156,7 @@ match <- function(GDELT){
   match  <- as.data.frame(matrix(ncol=2, nrow=nrow(GDELT)))
   names(match) <- c("url", "n")
     for (i in 1:nrow(GDELT)){
-      url <- substr(GDELT$documentSource[i], 1, nchar(as.character(GDELT$documentSource[i])) - 2)
+      url <- substr(GDELT$documentSource[i], 1, nchar(as.character(GDELT$documentSource[i])) - 10)
       number <- sum(grepl(url, GDELT$documentSource))
       match[i,1] <- url
       match[i,2] <- number
@@ -164,30 +166,65 @@ match <- function(GDELT){
 }
 
 matches <- match(GDELT)
+#matches is a dataset that contains a column of the urls that are repeated and then a column showing how many times it is repeated
+#matches shows 47 observations out of 1000
 
-  #matches is a dataset that contains a column of the urls that are repeated and then a column showing how many times it is repeated
+
+#alternative method - this removes the last 10 characters from the url then finds duplicates
+library(janitor, lib.loc="D:\\R\\Lib")
+GDELT$url10 <- substr(GDELT$documentSource, 1, nchar(as.character(GDELT$documentSource)) - 10)
+duplicates <- GDELT %>% get_dupes(url10)
+duplicates <- duplicates[,1:2]
+duplicates10 <- unique(duplicates)
+#duplicates10 shows 11392 duplicates
+
+#alternative method - this removes all the numbers from the urls then finds duplicates
+library(NLP, lib.loc="D:\\R\\Lib")
+library(tm, lib.loc="D:\\R\\Lib")
+GDELT$urlc <- removeNumbers(as.character(GDELT$documentSource))
+duplicates <- GDELT %>% get_dupes(urlc)
+duplicates <- duplicates[,1:2]
+duplicatesc <- unique(duplicates)
+#duplicatescc also shows 8250 duplictaes...
+
+duplicates <- GDELT %>% get_dupes(documentSource)
+duplicates <- duplicates[,1:2]
+duplicatesfull <- unique(duplicates)
+#duplicatesfull shows 47 duplicates
+
 
   #similar urls posted by several news outlets 
 source_character <- as.character(GDELT$documentSource) 
 split <- strsplit(source_character, "/")
 split <- unlist(split)
 decide <- as.data.frame(split)
+#this is a dataframe with a column containing a row for each section of a url separated by a /. so there are a lot of blank and
+#unecessary rows.
+#by taking only the rows that contain - or _ we are left with mostly the article topics
 decide <- as.data.frame(decide[grepl("-", decide$split) | grepl("_", decide$split),])
 names(decide) <- c("content")
 
-match1 <- function(decide){
-  match  <- as.data.frame(matrix(ncol=2, nrow=nrow(decide)))
-  names(match) <- c("content", "n")
-  for (i in 1:nrow(decide)){
-    content <- decide$content[i]
-    number <- sum(grepl(content, decide$content))
-    match[i,1] <- as.character(content)
-    match[i,2] <- number
-  }
-  match1 <- unique(subset(match, match[,2] > 1))
-  return(match1)
-}
+library(janitor, lib.loc="D:\\R\\Lib")
+library(dplyr, lib.loc="D:\\R\\Lib")
+duplicates <- decide %>% get_dupes(content)
+duplicates <- duplicates[,1:2]
+duplicates <- unique(duplicates)
+#37331 repeated rows
 
-matches1 <- match1(decide)
-  #matches1 is not a very tidy dataset but does highlight the stories that were posted more than once. 
-  #it doesn't say by which news outlets though
+#majority of rows are not article titles as all sections of the url are taken. 
+#assuming the most article titles have more than 30 characters, remove any rows that have less than 30 characters
+#a few article titles are lost by doing this but most rows under 30 characters dont appear to be article titles
+duplicates <- duplicates[nchar(as.character(duplicates$content)) > 30,]
+duplicates <- duplicates[order(duplicates$dupe_count, decreasing=TRUE),]
+#28276 repeated rows
+
+#compare themes and themesV2
+
+#bring in the list of the 284 possible themes that this column uses
+listthemes <- read.table("H:\\My Documents\\work\\R learning\\284themes.txt")
+names(listthemes) <- "theme"
+
+library(stringr, lib.loc="D:\\R\\Lib")
+str_detect(GDELT$themes, listthemes)
+themesv2 <- str_split(GDELT$themesCharLoc, ";|,")
+listthemes[[1]] == themesv2[[1]] #DEMOCRACY picked up but not ELECTION
