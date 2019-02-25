@@ -42,7 +42,7 @@ Using ThemesV2 to identify peaks of hazards to find hazard events
 Each could pick a different type of hazard (e.g. flooding / storms / heat or cold wave, i.e. extreme temperature)
 -> try to find in dataset using the themes
 
-##Lecture 2B- 
+## Lecture 2B- 
 1.	There is a useful package that allows you to parse the url into different sections. You could use that, ignore the domain (e.g. bbc.co.uk) and only look at the rest of the url (using url_parse).
 https://cran.r-project.org/web/packages/urltools/urltools.pdf
 
