@@ -41,3 +41,14 @@ Below are the goals/issue we should work towards and maybe even solve:
 Using ThemesV2 to identify peaks of hazards to find hazard events
 Each could pick a different type of hazard (e.g. flooding / storms / heat or cold wave, i.e. extreme temperature)
 -> try to find in dataset using the themes
+
+##Lecture 2B- 
+1.	There is a useful package that allows you to parse the url into different sections. You could use that, ignore the domain (e.g. bbc.co.uk) and only look at the rest of the url (using url_parse).
+https://cran.r-project.org/web/packages/urltools/urltools.pdf
+
+2.	Based on the rest part you could compute a similarity measure, something indicating how similar or different a string is to the others (rather than looking at whether or not it’s identical). 
+This is a bit complicated, but is something that data science work often requires (distances between objects are needed for all kinds of clustering algorithms).
+IF you want to have a look, I would try it on data for a single day or max two days to keep the number of articles low. I’d also only look at the first, say 15, characters per url (after having removed the domain) – again this should keep computation times down.
+As a starting point, looking into the adist function could be explored or the general stringdist package
+•	?adist
+•	https://cran.r-project.org/web/packages/stringdist/stringdist.pdf
