@@ -1,0 +1,95 @@
+.libPaths("D:\\R\\Lib")
+#Import data with a loop
+library(data.table, lib="D:\\R\\Lib")
+library(stringr, lib.loc="D:\\R\\Lib")
+library(tm, lib.loc="D:\\R\\Lib")
+
+#just importing the first file to work on 
+GDELT <- as.data.table(lapply("C:\\Users\\sandhr\\Downloads\\GDELT_gkg_f8_package1.csv", fread))
+
+GDELT1 <- GDELT
+#GDELT <- GDELT1[1:10000,]
+
+
+
+#compare themes and themesV2
+
+#bring in the list of the 284 possible themes that this column uses
+listthemes <- read.table("H:\\My Documents\\work\\R learning\\284themes.txt")
+names(listthemes) <- "theme"
+
+
+themes1sep <- str_split(GDELT$themes, ";")
+themes2 <- removeNumbers(as.character(GDELT$themesCharLoc))
+themes2sep <- str_split(themes2, ";|,")
+
+#create a column in GDELT that shows which themes are in the Themes column but not in the ThemesCharLoc column
+t1nott2 <- list() # full
+for (i in 1:length(themes2sep)){
+  themes2sep[[i]] <- unique(themes2sep[[i]])
+  t1nott2[[i]] <- paste(themes1sep[[i]][!(themes1sep[[i]] %in% themes2sep[[i]])], collapse=",")
+}
+
+GDELT$notinCharLoc <- as.data.table(unlist(t1nott2))
+
+#create a column in GDELT that shows which themes are in the ThemesCharLoc column but not in the Themes column
+t2nott1 <- list() # empty
+for (i in 1:length(themes1sep)){
+  themes1sep[[i]] <- unique(themes1sep[[i]])
+  t2nott1[[i]] <- paste(themes2sep[[i]][!(themes2sep[[i]] %in% themes1sep[[i]])], collapse=",")
+}
+
+GDELT$onlyinCharLoc <- as.data.table(unlist(t2nott1))
+
+#how many rows have no theme info from both theme columns?
+blanktheme <- GDELT[is.na(GDELT$themes) & is.na(GDELT$themesCharLoc)]
+#43108 observations. It appears that with these two variables, if one column has no information then neither does the other.
+
+#remove all the rows that have no information from the data
+cGDELT <- GDELT[!(is.na(GDELT$themes) & is.na(GDELT$themesCharLoc))]
+
+#most observations have more themes highlighted in the themes column but a few have themes in themesCharLoc that arent in themes
+cGDELT[cGDELT$onlyinCharLoc == "", "onlyinCharLoc"]  <- NA 
+cGDELT$notinCharLoc[cGDELT$notinCharLoc == ""]  <- NA 
+
+exactmatch <- cGDELT[(is.na(cGDELT$notinCharLoc) & is.na(cGDELT$onlyinCharLoc))]
+#there are 9662 observations that have the same themes mentioned in both columns
+
+onlyinCharLoc <- cGDELT[!is.na(cGDELT$onlyinCharLoc)]
+#there are 244492 observations that have themes in themesCharloc that do not appear in themes.
+
+notinCharLoc <- cGDELT[!is.na(cGDELT$notinCharLoc)]
+#there are 410554 observations that have themes in themes that do not appear in themescharloc.
+
+
+only <- unique(unlist(str_split(onlyinCharLoc$onlyinCharLoc, ","))) #1559 individual themes
+not <- unique(unlist(str_split(notinCharLoc$notinCharLoc, ","))) #4982 individual themes 
+
+#there doesnt seem to be a pattern in the differences yet as there are too many themes that are different. 
+#but how are there almost 5000 different themes when there are only supposed to be a possible 284 to choose from?
+
+#how many of these topics include certain words?
+sum(grepl(pattern = "TAX", x = only)) # only 35
+sum(grepl(pattern = "WB", x = only)) # only 1537
+#so remove those containing WB
+remain <- only[!grepl(pattern = "WB", x = only)] # only left with 22 all including TAX
+
+sum(grepl(pattern = "TAX", x = not)) # 3343
+sum(grepl(pattern = "WB", x = not)) #  1345
+
+notremain <- not[!grepl(pattern = "TAX", x = not)] 
+notremain <- notremain[!grepl(pattern = "WB", x = notremain)] 
+
+sum(!is.na(only[match(not, only)]))
+sum(!is.na(not[match(only, not)]))
+#so there are no common themes between these two? perhaps this is why they each don't appear in the other column 
+
+themeslist1 <- unlist(as.list(listthemes))
+length(themeslist1[!is.na(not[match(themeslist1, not)])]) 
+#there are 41 themes from not (notinCharLoc) that are in the original themelist. 
+#there are none in only. Perhaps themesCharLoc follows a different set of themes?
+
+#explore
+not <- cGDELT[!is.na(cGDELT$notinCharLoc)]
+only <- cGDELT[!is.na(cGDELT$onlyinCharLoc)]
+
