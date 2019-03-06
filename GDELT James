@@ -70,3 +70,134 @@ bbcterrorism <- subset(bbc, grepl(pattern = "TERROR", x = bbc$themes))
 bbcfinance <- subset(bbc, grepl(pattern = "finance", x = bbc$themes))
 ggplot() + geom_point(data=bbcterrorism, aes(x = dateTime, y = tone2), col = 'red') + geom_point(data=bbcfinance, aes(x = dateTime, y = tone2), col = 'green')
 
+##--New--##
+library(janitor)
+count(GDELT %>% get_dupes(documentSource)) 
+#Above cost fails to find all duplicates
+
+#Characters from 1 to -10
+url <- substr(GDELT$documentSource, 1, nchar(as.character(GDELT$documentSource)) - 5)
+urls <- as.data.frame(url)
+urls %>% get_dupes(url) %>% 
+  unique() %>% 
+  arrange(desc(dupe_count))
+#unique(urls %>% get_dupes(url))
+
+
+##Count & CountCharLock
+max(nchar(GDELT$documentSource))
+GDELT[7745,4]
+nchar(GDELT[7745,4])
+
+##This URL is incomplete for some reason. 
+
+##Count NA
+sum(is.na(GDELT$counts))
+sum(is.na(GDELT$countsCharLoc))
+
+##Count Unique
+count(unique(GDELT[,5]))
+count(unique(GDELT[,6]))
+
+##Filter out NAs 
+GDELT2 <- GDELT %>% filter(!is.na(counts)) %>% filter(!is.na(countsCharLoc))
+
+##Check similarities
+GDELT2 %>% 
+  filter(grepl("ARREST", counts)) %>% 
+  count()
+
+GDELT2 %>% 
+  filter(grepl("ARREST", countsCharLoc)) %>% 
+  count()
+
+#Same number of articles - same for most character counts
+
+GDELT2 %>% 
+  filter(grepl("KILL", counts)) %>% 
+  count()
+
+GDELT2 %>% 
+  filter(grepl("KILL", countsCharLoc)) %>% 
+  count()
+
+## All unique. 
+
+GDELT2 %>% 
+  filter(grepl("KILL", counts)) %>% 
+  unique()
+
+GDELT2 %>% 
+  filter(grepl("KILL", countsCharLoc)) %>% 
+  unique()
+
+##Duplicates
+length(unique(GDELT2$counts))
+
+length(unique(GDELT2$countsCharLoc)) 
+
+##Different number of duplicates. 
+
+GDELT2[251,5:6]
+
+##Differences include additional numbers for unknown reasons. 
+
+##Some unique websites include the same website but different comments: 
+GDELT2[101:107,4]
+##Counts and countsCharLoc are the same 
+
+##Difference between characters in Counts and CountsCharLoc
+diff(nchar(GDELT2[1,5:6]))
+
+##For loop for first 50. 
+GDELT3 <- GDELT2 %>% 
+  slice(1:50) %>% 
+  select(5:6)
+
+nchar(GDELT3[2,1]) - nchar(GDELT3[2,2])
+
+for (i in 1:nrow(GDELT3)) {
+  counts <- nchar(GDELT3[i, 1])
+  counts2 <- nchar(GDELT3[i, 2])
+  print(paste("Difference between counts and countsCharLoc is", counts - counts2))
+}
+
+##Average - takes a few moments 
+mean(nchar(GDELT2[,5])) - mean(nchar(GDELT2[,6]))
+
+
+##Removing from CharLoc 
+unlist(str_split(GDELT3$counts[2], '#'))[1:5]
+unlist(str_split(GDELT3$countsCharLoc[2], '#'))
+
+##Function
+
+getTopnCounts <- function(x, n = 10){
+  # split by '#' and unlist
+  outputVector <- unlist(str_split(x, '#'))
+  # take top n results
+  outputVector <- outputVector[1:n]
+  # collapse vector into a single comma separated value
+  outputValue <- paste(outputVector, collapse = ', ')
+  
+  return(outputValue)
+}
+
+myVec <- character(nrow(GDELT3))
+myVec2 <- character(nrow(GDELT3))
+
+for(i in seq_along(GDELT3$counts)){
+  myVec[i] <- getTopnCounts(GDELT3$counts[i], 11) #Change to 10 becomes TRUE
+  myVec2[i] <- getTopnCounts(GDELT3$countsCharLoc[i], 11) # change to 10 becomes TRUE
+}
+
+#Remove after first semi-colon
+nosemi <- character(nrow(GDELT3))
+nosemi2 <- character(nrow(GDELT3))
+
+
+for (i in seq_along(myVec)) {
+  nosemi[i] <- unlist(str_split(myVec[i], ';'))[1]
+  nosemi2[i] <- unlist(str_split(myVec2[i], ';'))[1]
+}
+nosemi == nosemi2
