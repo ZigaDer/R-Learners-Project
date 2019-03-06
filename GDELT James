@@ -2,7 +2,7 @@ library(readr)
 library(dplyr)
 
 #Import data from downloads folder
-GDELT <- read.csv("C:\\Users\\redmoj\\Downloads\\GDELT_gkg_f8_package1.csv")
+GDELT <- read_csv("C:\\Users\\redmoj\\Downloads\\gkg_f_Nov27th2015_Jan5th2016.csv")
 
 #Structure and info of GDELT
 str(GDELT)
