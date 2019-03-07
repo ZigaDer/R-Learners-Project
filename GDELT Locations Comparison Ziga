@@ -1,0 +1,78 @@
+#loading required packages
+library(data.table)
+library(tidyr)
+library(stringr)
+library(purrr)
+#Import
+GDELT <- fread("D:/R/Lib/gkg_f_Nov27th2015_Jan5th2016.csv")
+test <- GDELT[0:1000]
+
+?lapply
+SplitLocations <-  str_split(test$locations, ";") #%>% str_split( ",")
+SplitCharLoc <- str_split(test$locationsCharLoc, ";") #%>% str_split( ",")
+
+#slice just countries (1#****;) for both cols
+CountriesSliceLoc <- str_match_all(test$locations, "1#(.*?);")
+CountriesSliceCharLoc <- str_match_all(test$locationsCharLoc, "1#(.*?);")
+
+#LocCharLoc differs in many ways so in order to make sure that the changes aren't solely repetitions, I will cut more precisely
+JustCountriesLoc <-  str_match_all(test$locations, "1#([:alpha:].*?)#")#had to add the [:alpha:] to make sure I only get countries
+JustCountriesCharLoc <- str_match_all(test$locationsCharLoc, "1#([:alpha:].*?)#")
+#AAAAAAAAAAAAAAAAAAAA WHY DID THIS TAKE ME TWO HOURS. F*********
+LocCountryNames <- lapply(JustCountriesLoc, function (x) x[,2])
+CharLocCountryNames <-  lapply(JustCountriesCharLoc, function (x) x[,2])
+
+uniquesLocCharLoc <- lapply(CharLocCountryNames, unique)
+uniquesLoc <- lapply(LocCountryNames, unique)
+lengths <-  lapply(uniquesLoc, length)
+
+
+#Let's do some plumbing. The task below is to compare the number of unique words. 
+CountryNamesPipedLoc <-  str_match_all(test$locations, "1#([:alpha:].*?)#")  %>% 
+  lapply(function(x) x[,2]) %>% 
+  lapply(unique) %>% 
+  lapply(length)
+  
+CountryNamesPipedLocCharLoc <- str_match_all(test$locationsCharLoc, "1#([:alpha:].*?)#")  %>% 
+  lapply(function(x) x[,2]) %>% 
+  lapply(unique) %>% 
+  lapply(length)
+
+CountryNamesPipedLoc %in% CountryNamesPipedLocCharLoc ##Only 4 out of thousand values different, charloc adds a lot of additional information
+##HOWEVER, the big differnce can "probably" be explained by the additional words that are included as countries, such as aussie, brit, etc.
+##Let's compare World cities now
+
+WorldCitiesPipedLoc <-  str_match_all(test$locations, "4#([:alpha:].*?)#")  %>% 
+  lapply(function(x) x[,2]) %>% 
+  lapply(unique) %>% 
+  lapply(length)
+
+WorldCitiesPipedLocCharLoc <- str_match_all(test$locationsCharLoc, "4#([:alpha:].*?)#")  %>% 
+  lapply(function(x) x[,2]) %>% 
+  lapply(unique) %>% 
+  lapply(length)
+
+WorldCitiesDataFrame <- do.call(rbind, Map(data.frame, Loc=WorldCitiesPipedLoc, LocCharLoc = WorldCitiesPipedLocCharLoc))
+
+WorldCitiesDataFrame$TrueCheck <- with(WorldCitiesDataFrame, num[ifelse(Loc==LocCharLoc, TRUE, NA)])
+WorldCitiesDataFrame$num <- TRUE
+table(WorldCitiesDataFrame$TrueCheck == TRUE)
+##905 out of 1000 values are different when it comes to counting World cities
+
+#Now that we've become better at it, let's create 1 data frame for all similar values
+FinalDataFrame <-  do.call(rbind, Map(data.frame, WorldCitiesLocUnique=WorldCitiesPipedLoc,
+                                      WorldCitiesLocCharLocUnique = WorldCitiesPipedLocCharLoc,
+                                      CountriesLocUnique = CountryNamesPipedLoc,
+                                      CountriesLocCharLocUnique = CountryNamesPipedLocCharLoc))
+FinalDataFrame$DummyTrue <- TRUE
+FinalDataFrame$UniqueMatchWorldCities <-  with(FinalDataFrame, DummyTrue[ifelse(WorldCitiesLocUnique==WorldCitiesLocCharLocUnique, TRUE, NA)])
+FinalDataFrame$UniqueMatchCountries <-  with(FinalDataFrame, DummyTrue[ifelse(CountriesLocUnique==CountriesLocCharLocUnique, TRUE, NA)])
+FinalDataFrame$ZeroMentionsCountries <- with(FinalDataFrame, DummyTrue[ifelse(CountriesLocUnique==CountriesLocCharLocUnique & CountriesLocUnique == 0, TRUE, NA)])
+FinalDataFrame$ZeroMentionsWorldCities <-  with(FinalDataFrame, DummyTrue[ifelse(WorldCitiesLocUnique==WorldCitiesLocCharLocUnique & WorldCitiesLocUnique == 0, TRUE, NA)])
+
+table(FinalDataFrame$UniqueMatchWorldCities == TRUE) #569 out of 1000 Matched, quite a lot of value might be added using charloc for countries
+table(FinalDataFrame$UniqueMatchCountries == TRUE) # 905 out of 1000 Matched, possibly less value is added for world cities
+table(FinalDataFrame$ZeroMentionsWorldCities == TRUE) #138 of the 569 matched have no world cities mentioned
+table(FinalDataFrame$ZeroMentionsCountries == TRUE) #211 of the 905 matched have no countries mentioned
+
+
